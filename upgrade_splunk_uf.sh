@@ -13,7 +13,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Required environment variables
-SPLUNK_VERSION="${SPLUNK_VERSION:-9.2.5}"
+SPLUNK_VERSION="${SPLUNK_VERSION:-9.2.8}"
 SPLUNK_INSTALLER_PATH="${SPLUNK_INSTALLER_PATH:-/opt/splunk_installer.tgz}"
 SPLUNK_HOME="${SPLUNK_HOME:-/opt/splunk}"
 
@@ -65,13 +65,13 @@ cp -r "$SPLUNK_HOME/etc" "$BACKUP_DIR/" || {
 echo -e "${YELLOW}Extracting and upgrading Splunk...${NC}"
 tar xvzf "$SPLUNK_INSTALLER_PATH" -C /opt/
 
-# Set correct permissions
+# Set correct permissions BEFORE starting Splunk
 echo -e "${YELLOW}Setting permissions...${NC}"
-chown -R splunk:splunk "$SPLUNK_HOME" 2>/dev/null || chown -R root:root "$SPLUNK_HOME"
+chown -R splunkadmin:splunkadmin "$SPLUNK_HOME"
 
-# Start Splunk
-echo -e "${YELLOW}Starting Splunk...${NC}"
-$SPLUNK_HOME/bin/splunk start --accept-license --answer-yes
+# Start Splunk as splunkadmin user
+echo -e "${YELLOW}Starting Splunk as splunkadmin user...${NC}"
+sudo -u splunkadmin $SPLUNK_HOME/bin/splunk start --accept-license --answer-yes
 
 # Verify upgrade
 echo -e "${YELLOW}Verifying upgrade...${NC}"

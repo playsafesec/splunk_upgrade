@@ -10,7 +10,7 @@ on:
       splunk_version:
         description: 'Target Splunk version'
         required: true
-        default: '9.2.5'
+        default: '9.2.8'
   push:
     branches:
       - main
@@ -20,7 +20,7 @@ on:
 
 env:
   SPLUNK_HOME: '/opt/splunk'
-  SPLUNK_INSTALLER_URL: 'https://download.splunk.com/products/splunk/releases/9.2.5/linux/splunk-9.2.5-7bfc9a4ed6ba-Linux-x86_64.tgz'
+  SPLUNK_INSTALLER_URL: 'https://download.splunk.com/products/splunk/releases/9.2.8/linux/splunk-9.2.8-811db24f0af2-Linux-x86_64.tgz'
 
 jobs:
   upgrade:
