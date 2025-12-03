@@ -21,7 +21,7 @@ You can trigger the workflow in two ways:
 1. Go to **Actions** tab in your GitHub repository
 2. Select **Splunk Enterprise Upgrade** workflow
 3. Click **Run workflow**
-4. Enter target server IP (default: `20.83.155.249`)
+4. Enter target server IP (default: `20.84.40.194`)
 5. Enter Splunk version (default: `9.2.5`)
 6. Click **Run workflow**
 
@@ -34,7 +34,7 @@ The workflow automatically runs when you push changes to:
 
 ### Workflow Inputs
 
-- **target_server**: Target server IP or hostname (default: `20.83.155.249`)
+- **target_server**: Target server IP or hostname (default: `20.84.40.194`)
 - **splunk_version**: Target Splunk version (default: `9.2.5`)
 
 ### Environment Variables
