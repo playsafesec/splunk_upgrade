@@ -11,12 +11,6 @@ on:
         description: 'Target Splunk version'
         required: true
         default: '9.2.8'
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/splunk-upgrade.yml'
-      - 'upgrade_splunk_uf.sh'
 
 env:
   SPLUNK_HOME: '/opt/splunk'
