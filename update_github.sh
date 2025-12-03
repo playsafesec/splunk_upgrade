@@ -47,4 +47,4 @@ git commit -m "$COMMIT_MESSAGE"
 echo "🚀 Pushing to GitHub..."
 git push -u origin HEAD
 
-echo "✅ Successfully updated GitHub repository!"
+echo "✅ Successfully updated GitHub repository branch!"
