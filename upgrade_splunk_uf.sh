@@ -60,23 +60,10 @@ cp -r "$SPLUNK_HOME/etc" "$BACKUP_DIR/" || {
     echo -e "${RED}Warning: Failed to backup etc directory${NC}"
 }
 
-# Extract installer to a temporary directory in /opt (not /tmp due to space constraints)
-TEMP_INSTALL_DIR=$(mktemp -d /opt/splunk_temp.XXXXXX)
-echo -e "${YELLOW}Extracting installer to $TEMP_INSTALL_DIR...${NC}"
-tar xvzf "$SPLUNK_INSTALLER_PATH" -C "$TEMP_INSTALL_DIR"
-
-# Get the splunk directory name from the extracted archive
-EXTRACTED_DIR=$(find "$TEMP_INSTALL_DIR" -maxdepth 1 -type d -name "splunk*" -o -name "Splunk*" | head -n 1)
-
-if [ -z "$EXTRACTED_DIR" ]; then
-    echo -e "${RED}Error: Could not find extracted Splunk directory${NC}"
-    rm -rf "$TEMP_INSTALL_DIR"
-    exit 1
-fi
-
-# Perform upgrade by copying files
-echo -e "${YELLOW}Performing upgrade...${NC}"
-rsync -av --exclude='etc' "$EXTRACTED_DIR/" "$SPLUNK_HOME/"
+# Extract new Splunk version directly to /opt/
+# This will preserve the etc directory and upgrade the binaries
+echo -e "${YELLOW}Extracting and upgrading Splunk...${NC}"
+tar xvzf "$SPLUNK_INSTALLER_PATH" -C /opt/
 
 # Set correct permissions
 echo -e "${YELLOW}Setting permissions...${NC}"
@@ -106,9 +93,5 @@ else
     echo "Backup is available at: $BACKUP_DIR"
     exit 1
 fi
-
-# Cleanup
-echo -e "${YELLOW}Cleaning up temporary files...${NC}"
-rm -rf "$TEMP_INSTALL_DIR"
 
 echo -e "${GREEN}Done!${NC}"
