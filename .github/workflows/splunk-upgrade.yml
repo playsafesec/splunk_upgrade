@@ -10,7 +10,7 @@ on:
       splunk_version:
         description: 'Target Splunk version'
         required: true
-        default: '9.2.8'
+        default: '9.2.9'
 
 env:
   SPLUNK_HOME: '/opt/splunk'
