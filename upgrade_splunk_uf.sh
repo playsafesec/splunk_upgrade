@@ -60,10 +60,10 @@ cp -r "$SPLUNK_HOME/etc" "$BACKUP_DIR/" || {
     echo -e "${RED}Warning: Failed to backup etc directory${NC}"
 }
 
-# Extract installer to a temporary directory
-TEMP_INSTALL_DIR=$(mktemp -d)
+# Extract installer to a temporary directory in /opt (not /tmp due to space constraints)
+TEMP_INSTALL_DIR=$(mktemp -d /opt/splunk_temp.XXXXXX)
 echo -e "${YELLOW}Extracting installer to $TEMP_INSTALL_DIR...${NC}"
-tar xzf "$SPLUNK_INSTALLER_PATH" -C "$TEMP_INSTALL_DIR"
+tar xvzf "$SPLUNK_INSTALLER_PATH" -C "$TEMP_INSTALL_DIR"
 
 # Get the splunk directory name from the extracted archive
 EXTRACTED_DIR=$(find "$TEMP_INSTALL_DIR" -maxdepth 1 -type d -name "splunk*" -o -name "Splunk*" | head -n 1)
