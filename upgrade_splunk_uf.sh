@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Required environment variables
 SPLUNK_VERSION="${SPLUNK_VERSION:-9.2.5}"
-SPLUNK_INSTALLER_PATH="${SPLUNK_INSTALLER_PATH:-/tmp/splunk_installer.tgz}"
+SPLUNK_INSTALLER_PATH="${SPLUNK_INSTALLER_PATH:-/opt/splunk_installer.tgz}"
 SPLUNK_HOME="${SPLUNK_HOME:-/opt/splunk}"
 
 echo -e "${GREEN}========================================${NC}"
@@ -53,7 +53,7 @@ echo -e "${YELLOW}Stopping Splunk...${NC}"
 $SPLUNK_HOME/bin/splunk stop
 
 # Backup current installation (optional but recommended)
-BACKUP_DIR="/tmp/splunk_backup_$(date +%Y%m%d_%H%M%S)"
+BACKUP_DIR="/opt/splunk_backup_$(date +%Y%m%d_%H%M%S)"
 echo -e "${YELLOW}Creating backup at $BACKUP_DIR...${NC}"
 mkdir -p "$BACKUP_DIR"
 cp -r "$SPLUNK_HOME/etc" "$BACKUP_DIR/" || {

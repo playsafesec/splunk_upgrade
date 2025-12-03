@@ -6,7 +6,7 @@ on:
       target_server:
         description: 'Target server IP/hostname'
         required: true
-        default: '20.83.155.249'
+        default: '20.84.40.194'
       splunk_version:
         description: 'Target Splunk version'
         required: true
@@ -42,20 +42,20 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ github.event.inputs.target_server || '20.83.155.249' }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ github.event.inputs.target_server || '20.84.40.194' }} >> ~/.ssh/known_hosts
 
       - name: Copy Upgrade Script to Target Server
         run: |
-          scp -i ~/.ssh/id_rsa upgrade_splunk_uf.sh ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.83.155.249' }}:/tmp/upgrade_splunk_uf.sh
-          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.83.155.249' }} "chmod +x /tmp/upgrade_splunk_uf.sh"
+          scp -i ~/.ssh/id_rsa upgrade_splunk_uf.sh ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.84.40.194' }}:/tmp/upgrade_splunk_uf.sh
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.84.40.194' }} "chmod +x /tmp/upgrade_splunk_uf.sh"
 
       - name: Copy Installer to Target Server
         run: |
-          scp -i ~/.ssh/id_rsa ${{ runner.temp }}/installer/splunk-installer.tgz ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.83.155.249' }}:/tmp/splunk_installer.tgz
+          scp -i ~/.ssh/id_rsa ${{ runner.temp }}/installer/splunk-installer.tgz ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.84.40.194' }}:/tmp/splunk_installer.tgz
 
       - name: Execute Upgrade on Target Server
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.83.155.249' }} << 'EOF'
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.84.40.194' }} << 'EOF'
             sudo SPLUNK_VERSION="${{ github.event.inputs.splunk_version || '9.2.5' }}" \
                  SPLUNK_INSTALLER_PATH="/tmp/splunk_installer.tgz" \
                  SPLUNK_HOME="${{ env.SPLUNK_HOME }}" \
@@ -64,7 +64,7 @@ jobs:
 
       - name: Verify Upgrade
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.83.155.249' }} << 'EOF'
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.84.40.194' }} << 'EOF'
             sudo ${{ env.SPLUNK_HOME }}/bin/splunk status
             VERSION=$(sudo ${{ env.SPLUNK_HOME }}/bin/splunk version)
             echo "Upgrade successful!"
@@ -74,7 +74,7 @@ jobs:
       - name: Cleanup Target Server
         if: always()
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.83.155.249' }} \
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.84.40.194' }} \
             "rm -f /tmp/upgrade_splunk_uf.sh /tmp/splunk_installer.tgz" || true
 
       - name: Cleanup SSH Key
