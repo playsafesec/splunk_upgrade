@@ -27,10 +27,8 @@ function App() {
         const repo = import.meta.env.VITE_GITHUB_REPO || 'splunk_upgrade';
         const workflowFileName = import.meta.env.VITE_WORKFLOW_FILE || 'splunk-upgrade.yml';
 
-        if (!token) {
-          setInitError('GitHub token not configured. Please set VITE_GITHUB_TOKEN in .env file.');
-          return;
-        }
+        // Token is optional - GitHub API can work without auth for basic operations
+      // If token is not available, API calls will be rate-limited to 60 requests/hour
 
         // Initialize GitHub API
         initializeGitHubAPI({
