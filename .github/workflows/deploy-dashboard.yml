@@ -48,7 +48,7 @@ jobs:
           VITE_WORKFLOW_FILE: splunk-upgrade.yml
         run: |
           cd dashboard
-          npm run build
+          VITE_GITHUB_TOKEN=${{ secrets.GH_PAT }} VITE_GITHUB_OWNER=${{ github.repository_owner }} VITE_GITHUB_REPO=${{ github.event.repository.name }} npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
