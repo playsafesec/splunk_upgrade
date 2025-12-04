@@ -1,0 +1,78 @@
+{
+  "run_id": "run_20251204_184822",
+  "workflow_name": "Splunk Upgrade",
+  "started_at": "2025-12-04T18:48:22Z",
+  "completed_at": "2025-12-04T18:51:23Z",
+  "status": "success",
+  "inputs": {
+    "target_mode": "single_server",
+    "host_class": "azure_hf",
+    "server_name": "azure_hf_1",
+    "package_id": "splunk_enterprise_9.2.7"
+  },
+  "jobs": {
+    "prepare": {
+      "status": "running",
+      "started_at": "2025-12-04T18:48:42Z",
+      "completed_at": null,
+      "outputs": {},
+      "logs": []
+    },
+    "upgrade": {
+      "servers": [
+        {
+          "name": "azure_hf_1",
+          "ip": "20.84.40.194",
+          "status": "success",
+          "started_at": "2025-12-04T18:49:06Z",
+          "completed_at": "2025-12-04T18:51:01Z",
+          "steps": [
+            {
+              "name": "Server upgrade started",
+              "status": "running",
+              "timestamp": "2025-12-04T18:49:06Z",
+              "output": "Initializing upgrade for azure_hf_1\n"
+            },
+            {
+              "name": "Downloaded Splunk installer",
+              "status": "running",
+              "timestamp": "2025-12-04T18:49:08Z",
+              "output": "Package downloaded successfully\n"
+            },
+            {
+              "name": "SSH connection established",
+              "status": "running",
+              "timestamp": "2025-12-04T18:49:08Z",
+              "output": "SSH key configured and connection ready\n"
+            },
+            {
+              "name": "Installer copied to server",
+              "status": "running",
+              "timestamp": "2025-12-04T18:49:21Z",
+              "output": "Package transferred to target server\n"
+            },
+            {
+              "name": "Upgrade script executed",
+              "status": "running",
+              "timestamp": "2025-12-04T18:51:00Z",
+              "output": "Splunk upgrade completed on target server\n"
+            },
+            {
+              "name": "Upgrade verified",
+              "status": "success",
+              "timestamp": "2025-12-04T18:51:01Z",
+              "output": "Register this system with Red Hat Insights: insights-client --register\nCreate an account or view all your systems at https://red.ht/insights-dashboard\nsplunkd is running (PID: 251541).\nsplunk helpers are running (PIDs: 251542 251783 251844 251860 251861 251926 252159 252339).\n✅ Upgrade successful on azure_hf_1!\n📌 Version: Splunk 9.2.7 (build b6481e66baf5)\nSplunk 9.2.7 (build b6481e66baf5)\n"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "summary": {
+    "total_servers": 1,
+    "successful": 1,
+    "failed": 0,
+    "duration_seconds": 181
+  },
+  "errors": []
+}
