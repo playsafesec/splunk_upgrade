@@ -114,6 +114,31 @@ jobs:
           name: workflow-logs
           path: .
 
+      - name: Move Log Files to Correct Location
+        run: |
+          echo "📦 Moving log files to dashboard/logs/"
+          mkdir -p dashboard/logs
+          
+          # Move any JSON files from root to dashboard/logs (except inventory files)
+          for file in *.json; do
+            if [ -f "$file" ] && [[ "$file" == run_*.json ]]; then
+              echo "Moving $file to dashboard/logs/"
+              mv "$file" dashboard/logs/
+            fi
+          done
+          
+          # Move any tmp files and rename them to .json
+          for file in *.json.tmp; do
+            if [ -f "$file" ]; then
+              base_name="${file%.tmp}"
+              echo "Moving $file to dashboard/logs/$base_name"
+              mv "$file" "dashboard/logs/$base_name"
+            fi
+          done
+          
+          echo "✅ Files moved successfully"
+          ls -la dashboard/logs/
+
       - name: Update Job Status - Started
         run: |
           sudo apt-get update && sudo apt-get install -y jq
@@ -416,6 +441,31 @@ jobs:
         with:
           name: workflow-logs
           path: .
+
+      - name: Move Log Files to Correct Location
+        run: |
+          echo "📦 Moving log files to dashboard/logs/"
+          mkdir -p dashboard/logs
+          
+          # Move any JSON files from root to dashboard/logs (except inventory files)
+          for file in *.json; do
+            if [ -f "$file" ] && [[ "$file" == run_*.json ]]; then
+              echo "Moving $file to dashboard/logs/"
+              mv "$file" dashboard/logs/
+            fi
+          done
+          
+          # Move any tmp files and rename them to .json
+          for file in *.json.tmp; do
+            if [ -f "$file" ]; then
+              base_name="${file%.tmp}"
+              echo "Moving $file to dashboard/logs/$base_name"
+              mv "$file" "dashboard/logs/$base_name"
+            fi
+          done
+          
+          echo "✅ Files moved successfully"
+          ls -la dashboard/logs/
 
       - name: Finalize Workflow Log
         run: |
