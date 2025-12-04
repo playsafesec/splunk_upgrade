@@ -16,12 +16,12 @@ init_log() {
     local run_id="$1"
     local workflow_name="$2"
     local inputs_json="$3"
-    local log_file="logs/${run_id}.json"
+    local log_file="dashboard/logs/${run_id}.json"
     
     echo -e "${BLUE}📝 Initializing log file: ${log_file}${NC}"
     
     # Create logs directory if it doesn't exist
-    mkdir -p logs
+    mkdir -p dashboard/logs
     
     # Create initial log structure
     cat > "$log_file" <<EOF
@@ -53,7 +53,7 @@ update_job_status() {
     local job_name="$2"
     local status="$3"
     local output_json="${4:-{}}"
-    local log_file="logs/${run_id}.json"
+    local log_file="dashboard/logs/${run_id}.json"
     
     if [ ! -f "$log_file" ]; then
         echo -e "${RED}❌ Log file not found: ${log_file}${NC}"
@@ -86,7 +86,7 @@ add_job_log() {
     local run_id="$1"
     local job_name="$2"
     local log_message="$3"
-    local log_file="logs/${run_id}.json"
+    local log_file="dashboard/logs/${run_id}.json"
     
     if [ ! -f "$log_file" ]; then
         echo -e "${RED}❌ Log file not found: ${log_file}${NC}"
@@ -115,7 +115,7 @@ update_server_status() {
     local status="$4"
     local step_name="$5"
     local step_output="$6"
-    local log_file="logs/${run_id}.json"
+    local log_file="dashboard/logs/${run_id}.json"
     
     if [ ! -f "$log_file" ]; then
         echo -e "${RED}❌ Log file not found: ${log_file}${NC}"
@@ -176,7 +176,7 @@ update_server_status() {
 finalize_log() {
     local run_id="$1"
     local final_status="$2"
-    local log_file="logs/${run_id}.json"
+    local log_file="dashboard/logs/${run_id}.json"
     
     if [ ! -f "$log_file" ]; then
         echo -e "${RED}❌ Log file not found: ${log_file}${NC}"
@@ -212,7 +212,7 @@ add_error() {
     local run_id="$1"
     local error_message="$2"
     local error_context="$3"
-    local log_file="logs/${run_id}.json"
+    local log_file="dashboard/logs/${run_id}.json"
     
     if [ ! -f "$log_file" ]; then
         echo -e "${RED}❌ Log file not found: ${log_file}${NC}"

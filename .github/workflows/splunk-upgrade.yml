@@ -85,19 +85,13 @@ jobs:
           # Initialize log file in dashboard/logs folder (for GitHub Pages access)
           init_log "$RUN_ID" "Splunk Upgrade" "$INPUTS_JSON"
           
-          # Also copy to dashboard/logs for direct access
-          mkdir -p dashboard/logs
-          cp "logs/$RUN_ID.json" "dashboard/logs/$RUN_ID.json"
-          
           echo "✅ Logging initialized with Run ID: $RUN_ID"
 
       - name: Upload Log Artifact
         uses: actions/upload-artifact@v4
         with:
           name: workflow-logs
-          path: |
-            logs/
-            dashboard/logs/
+          path: dashboard/logs/
 
   prepare:
     name: Prepare Upgrade Configuration
@@ -415,7 +409,7 @@ jobs:
           
           # Copy to dashboard/logs for GitHub Pages
           mkdir -p dashboard/logs
-          cp "logs/${{ needs.init_logging.outputs.run_id }}.json" "dashboard/logs/${{ needs.init_logging.outputs.run_id }}.json"
+          cp "dashboard/logs/${{ needs.init_logging.outputs.run_id }}.json" "dashboard/dashboard/logs/${{ needs.init_logging.outputs.run_id }}.json"
 
       - name: Display Summary
         run: |
@@ -434,14 +428,14 @@ jobs:
           echo "================================================"
           
           # Display log file info
-          LOG_FILE="logs/${{ needs.init_logging.outputs.run_id }}.json"
+          LOG_FILE="dashboard/logs/${{ needs.init_logging.outputs.run_id }}.json"
           if [ -f "$LOG_FILE" ]; then
             echo ""
             echo "📊 Workflow Summary:"
             jq -r '.summary | "Total Servers: \(.total_servers)\nSuccessful: \(.successful)\nFailed: \(.failed)\nDuration: \(.duration_seconds)s"' "$LOG_FILE"
             echo ""
             echo "📝 Log saved to: $LOG_FILE"
-            echo "📝 Dashboard log: dashboard/logs/${{ needs.init_logging.outputs.run_id }}.json"
+            echo "📝 Dashboard log: dashboard/dashboard/logs/${{ needs.init_logging.outputs.run_id }}.json"
           fi
 
       - name: Update Dashboard Log List
@@ -469,10 +463,8 @@ jobs:
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Add both log locations and updated dashboard.js
-          git add logs/
-          git add dashboard/logs/
-          git add dashboard/dashboard.js
+          # Add dashboard folder (includes logs and updated JS)
+          git add dashboard/
           
           if git diff --staged --quiet; then
             echo "📭 No new logs to commit"
@@ -481,5 +473,8 @@ jobs:
             git commit -m "📊 Add workflow run logs: ${{ needs.init_logging.outputs.run_id }}"
             
             echo "🚀 Pushing logs to repository..."
+            git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
+            
+            echo "✅ Logs successfully committed and pushed!"
           fi
 
