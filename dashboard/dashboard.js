@@ -55,31 +55,27 @@ function initializeDashboard() {
     }
 }
 
-// Load workflow logs by fetching index file then loading each log
-// Matches the CSV loading pattern from user's other GitHub Pages site
+// Load workflow logs directly from the logs folder
+// Matches the CSV loading pattern - files are in the same directory structure
 async function loadWorkflowLogs() {
     showLoading(true);
 
     try {
         console.log('🔍 Loading workflow logs...');
 
-        // Fetch the logs index file (similar to fetching usecases.csv)
-        const response = await fetch('logs-index.txt');
-        const text = await response.text();
+        // List of all log files - add new ones as they're created
+        // Just like the use cases in usecases.csv
+        const logFiles = [
+            'run_20251204_155300_sample.json',
+            // New log files will be added here automatically by the workflow
+        ];
 
-        // Parse the file - one filename per line
-        const logFiles = text.split('\n')
-            .map(line => line.trim())
-            .filter(line => line.length > 0 && line.endsWith('.json'));
-
-        console.log(`📋 Found ${logFiles.length} log files in index`);
-
-        // Fetch all log files (parallel loading like the CSV use cases)
+        // Fetch all logs directly (same as fetching CSV data)
         const logPromises = logFiles.map(async (filename) => {
             try {
-                const logResponse = await fetch(`../logs/${filename}`);
-                if (logResponse.ok) {
-                    const logData = await logResponse.json();
+                const response = await fetch(`logs/${filename}`);
+                if (response.ok) {
+                    const logData = await response.json();
                     console.log(`✅ Loaded: ${filename}`);
                     return logData;
                 }
