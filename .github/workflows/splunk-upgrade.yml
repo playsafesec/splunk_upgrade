@@ -37,6 +37,7 @@ on:
           - splunk_enterprise_9.2.7
           - splunk_uf_9.4.5
           - splunk_uf_9.4.6
+          - splunk_uf_9.4.7
 
 jobs:
   prepare:
