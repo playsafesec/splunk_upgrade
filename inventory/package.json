@@ -1,6 +1,17 @@
 {
     "packages": [
         {
+            "id": "splunk_enterprise_9.2.10",
+            "name": "Splunk Enterprise",
+            "type": "enterprise",
+            "version": "9.2.10",
+            "build": "37c0a7e2ccbd",
+            "platform": "Linux-x86_64",
+            "download_url": "https://download.splunk.com/products/splunk/releases/9.2.10/linux/splunk-9.2.10-37c0a7e2ccbd-Linux-x86_64.tgz",
+            "filename": "splunk-9.2.10-37c0a7e2ccbd-Linux-x86_64.tgz",
+            "install_path": "/opt/splunk"
+        },
+        {
             "id": "splunk_enterprise_9.2.9",
             "name": "Splunk Enterprise",
             "type": "enterprise",
