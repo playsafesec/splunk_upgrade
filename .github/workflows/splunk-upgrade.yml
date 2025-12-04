@@ -220,26 +220,33 @@ jobs:
           name: workflow-logs
           path: .
 
-      - name: Debug - Show Directory Structure
+      - name: Move Log Files to Correct Location
         run: |
-          echo "📁 Current directory structure:"
-          ls -la
-          echo ""
-          echo "📁 Dashboard directory:"
-          ls -la dashboard/ || echo "dashboard/ not found"
-          echo ""
-          echo "📁 Dashboard/logs directory:"
-          ls -la dashboard/logs/ || echo "dashboard/logs/ not found"
-          echo ""
-          echo "🔍 Searching for log files:"
-          find . -name "*.json" -type f || echo "No JSON files found"
+          echo "� Moving log files to dashboard/logs/"
+          mkdir -p dashboard/logs
+          
+          # Move any JSON files from root to dashboard/logs (except inventory files)
+          for file in *.json; do
+            if [ -f "$file" ] && [[ "$file" == run_*.json ]]; then
+              echo "Moving $file to dashboard/logs/"
+              mv "$file" dashboard/logs/
+            fi
+          done
+          
+          # Move any tmp files too
+          for file in *.json.tmp; do
+            if [ -f "$file" ]; then
+              echo "Moving $file to dashboard/logs/"
+              mv "$file" dashboard/logs/
+            fi
+          done
+          
+          echo "✅ Files moved successfully"
+          ls -la dashboard/logs/
 
       - name: Setup Logging
         run: |
           sudo apt-get update && sudo apt-get install -y jq
-          
-          # Ensure the dashboard/logs directory exists
-          mkdir -p dashboard/logs
           
           source scripts/log_helper.sh
           update_server_status "${{ needs.init_logging.outputs.run_id }}" \
