@@ -220,9 +220,27 @@ jobs:
           name: workflow-logs
           path: .
 
+      - name: Debug - Show Directory Structure
+        run: |
+          echo "📁 Current directory structure:"
+          ls -la
+          echo ""
+          echo "📁 Dashboard directory:"
+          ls -la dashboard/ || echo "dashboard/ not found"
+          echo ""
+          echo "📁 Dashboard/logs directory:"
+          ls -la dashboard/logs/ || echo "dashboard/logs/ not found"
+          echo ""
+          echo "🔍 Searching for log files:"
+          find . -name "*.json" -type f || echo "No JSON files found"
+
       - name: Setup Logging
         run: |
           sudo apt-get update && sudo apt-get install -y jq
+          
+          # Ensure the dashboard/logs directory exists
+          mkdir -p dashboard/logs
+          
           source scripts/log_helper.sh
           update_server_status "${{ needs.init_logging.outputs.run_id }}" \
             "${{ matrix.server.name }}" \
