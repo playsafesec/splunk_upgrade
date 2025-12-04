@@ -112,7 +112,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: workflow-logs
-          path: logs/
+          path: .
 
       - name: Update Job Status - Started
         run: |
@@ -197,7 +197,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: workflow-logs
-          path: logs/
+          path: dashboard/logs/
           overwrite: true
 
   upgrade:
@@ -218,7 +218,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: workflow-logs
-          path: logs/
+          path: .
 
       - name: Setup Logging
         run: |
@@ -372,7 +372,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: workflow-logs
-          path: logs/
+          path: dashboard/logs/
           overwrite: true
 
   summary:
@@ -389,7 +389,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: workflow-logs
-          path: logs/
+          path: .
 
       - name: Finalize Workflow Log
         run: |
