@@ -27,6 +27,7 @@ on:
         required: true
         type: choice
         options:
+          - splunk_enterprise_9.3.1
           - splunk_enterprise_9.3.0
           - splunk_enterprise_9.2.11
           - splunk_enterprise_9.2.10
