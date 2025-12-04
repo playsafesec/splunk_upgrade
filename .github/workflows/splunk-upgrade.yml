@@ -27,6 +27,7 @@ on:
         required: true
         type: choice
         options:
+          - splunk_enterprise_9.3.3
           - splunk_enterprise_9.3.2
           - splunk_enterprise_9.3.1
           - splunk_enterprise_9.3.0
@@ -40,8 +41,56 @@ on:
           - splunk_uf_9.4.7
 
 jobs:
+  init_logging:
+    name: Initialize Workflow Logging
+    runs-on: ubuntu-latest
+    outputs:
+      run_id: ${{ steps.init_log.outputs.run_id }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize Log File
+        id: init_log
+        run: |
+          # Install jq for JSON manipulation
+          sudo apt-get update && sudo apt-get install -y jq
+          
+          # Generate unique run ID
+          RUN_ID="run_$(date -u +%Y%m%d_%H%M%S)"
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          
+          # Source logging helper
+          source scripts/log_helper.sh
+          
+          # Create inputs JSON
+          INPUTS_JSON=$(jq -n \
+            --arg mode "${{ github.event.inputs.target_mode }}" \
+            --arg class "${{ github.event.inputs.host_class }}" \
+            --arg server "${{ github.event.inputs.server_name }}" \
+            --arg package "${{ github.event.inputs.package_id }}" \
+            '{
+              target_mode: $mode,
+              host_class: $class,
+              server_name: $server,
+              package_id: $package
+            }')
+          
+          # Initialize log file
+          init_log "$RUN_ID" "Splunk Upgrade" "$INPUTS_JSON"
+          
+          echo "✅ Logging initialized with Run ID: $RUN_ID"
+
+      - name: Upload Log Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow-logs
+          path: logs/
+
   prepare:
     name: Prepare Upgrade Configuration
+    needs: init_logging
     runs-on: ubuntu-latest
     outputs:
       servers: ${{ steps.parse.outputs.servers }}
@@ -54,11 +103,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Download Log Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: workflow-logs
+          path: logs/
+
+      - name: Update Job Status - Started
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          source scripts/log_helper.sh
+          update_job_status "${{ needs.init_logging.outputs.run_id }}" "prepare" "running"
+
       - name: Parse inventory files
         id: parse
         run: |
-          # Install jq for JSON parsing
-          sudo apt-get update && sudo apt-get install -y jq
+          # Install jq for JSON parsing (already installed above)
+          source scripts/log_helper.sh
           
           # Parse host inventory based on mode
           if [ "${{ github.event.inputs.target_mode }}" == "single_server" ]; then
@@ -97,9 +158,46 @@ jobs:
           echo "📌 Version: $PACKAGE_VERSION"
           echo "🖥️  Host Class: ${{ github.event.inputs.host_class }}"
 
+      - name: Update Job Status - Completed
+        if: success()
+        run: |
+          source scripts/log_helper.sh
+          
+          # Create outputs JSON
+          OUTPUTS_JSON=$(jq -n \
+            --arg servers '${{ steps.parse.outputs.servers }}' \
+            --arg url "${{ steps.parse.outputs.package_url }}" \
+            --arg version "${{ steps.parse.outputs.package_version }}" \
+            --arg type "${{ steps.parse.outputs.package_type }}" \
+            --arg path "${{ steps.parse.outputs.install_path }}" \
+            '{
+              servers: $servers,
+              package_url: $url,
+              package_version: $version,
+              package_type: $type,
+              install_path: $path
+            }')
+          
+          update_job_status "${{ needs.init_logging.outputs.run_id }}" "prepare" "success" "$OUTPUTS_JSON"
+
+      - name: Update Job Status - Failed
+        if: failure()
+        run: |
+          source scripts/log_helper.sh
+          update_job_status "${{ needs.init_logging.outputs.run_id }}" "prepare" "failure"
+          add_error "${{ needs.init_logging.outputs.run_id }}" "Prepare job failed" "Failed during inventory parsing"
+
+      - name: Upload Log Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow-logs
+          path: logs/
+          overwrite: true
+
   upgrade:
     name: Upgrade Server
-    needs: prepare
+    needs: [init_logging, prepare]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -111,6 +209,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Download Log Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: workflow-logs
+          path: logs/
+
+      - name: Setup Logging
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          source scripts/log_helper.sh
+          update_server_status "${{ needs.init_logging.outputs.run_id }}" \
+            "${{ matrix.server.name }}" \
+            "${{ matrix.server.ip }}" \
+            "running" \
+            "Server upgrade started" \
+            "Initializing upgrade for ${{ matrix.server.name }}"
+
       - name: Download Splunk Installer
         run: |
           mkdir -p ${{ runner.temp }}/installer
@@ -118,12 +233,32 @@ jobs:
           wget -O ${{ runner.temp }}/installer/splunk-installer.tgz "${{ needs.prepare.outputs.package_url }}"
           ls -lh ${{ runner.temp }}/installer/
 
+      - name: Log Download Complete
+        run: |
+          source scripts/log_helper.sh
+          update_server_status "${{ needs.init_logging.outputs.run_id }}" \
+            "${{ matrix.server.name }}" \
+            "${{ matrix.server.ip }}" \
+            "running" \
+            "Downloaded Splunk installer" \
+            "Package downloaded successfully"
+
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ matrix.server.ip }} >> ~/.ssh/known_hosts
+
+      - name: Log SSH Setup Complete
+        run: |
+          source scripts/log_helper.sh
+          update_server_status "${{ needs.init_logging.outputs.run_id }}" \
+            "${{ matrix.server.name }}" \
+            "${{ matrix.server.ip }}" \
+            "running" \
+            "SSH connection established" \
+            "SSH key configured and connection ready"
 
       - name: Display Server Info
         run: |
@@ -143,25 +278,78 @@ jobs:
           echo "📤 Copying installer to ${{ matrix.server.name }}..."
           scp -i ~/.ssh/id_rsa ${{ runner.temp }}/installer/splunk-installer.tgz ${{ secrets.SSH_USER }}@${{ matrix.server.ip }}:/opt/splunk_installer.tgz
 
+      - name: Log Installer Copied
+        run: |
+          source scripts/log_helper.sh
+          update_server_status "${{ needs.init_logging.outputs.run_id }}" \
+            "${{ matrix.server.name }}" \
+            "${{ matrix.server.ip }}" \
+            "running" \
+            "Installer copied to server" \
+            "Package transferred to target server"
+
       - name: Execute Upgrade on Target Server
+        id: execute_upgrade
         run: |
           echo "🚀 Starting upgrade on ${{ matrix.server.name }}..."
-          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ matrix.server.ip }} << 'EOF'
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ matrix.server.ip }} <<'EOF'
             sudo SPLUNK_VERSION="${{ needs.prepare.outputs.package_version }}" \
                  SPLUNK_INSTALLER_PATH="/opt/splunk_installer.tgz" \
                  SPLUNK_HOME="${{ needs.prepare.outputs.install_path }}" \
                  /tmp/upgrade_splunk.sh
           EOF
 
+      - name: Log Upgrade Executed
+        run: |
+          source scripts/log_helper.sh
+          update_server_status "${{ needs.init_logging.outputs.run_id }}" \
+            "${{ matrix.server.name }}" \
+            "${{ matrix.server.ip }}" \
+            "running" \
+            "Upgrade script executed" \
+            "Splunk upgrade completed on target server"
+
       - name: Verify Upgrade
+        id: verify
         run: |
           echo "✅ Verifying upgrade on ${{ matrix.server.name }}..."
-          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ matrix.server.ip }} << 'EOF'
+          VERIFY_OUTPUT=$(ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ matrix.server.ip }} <<'EOF'
             sudo ${{ needs.prepare.outputs.install_path }}/bin/splunk status
             VERSION=$(sudo ${{ needs.prepare.outputs.install_path }}/bin/splunk version)
             echo "✅ Upgrade successful on ${{ matrix.server.name }}!"
             echo "📌 Version: $VERSION"
+            echo "$VERSION"
           EOF
+          )
+          echo "$VERIFY_OUTPUT"
+          echo "verify_output<<EOF" >> $GITHUB_OUTPUT
+          echo "$VERIFY_OUTPUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Log Verification Success
+        if: success()
+        run: |
+          source scripts/log_helper.sh
+          update_server_status "${{ needs.init_logging.outputs.run_id }}" \
+            "${{ matrix.server.name }}" \
+            "${{ matrix.server.ip }}" \
+            "success" \
+            "Upgrade verified" \
+            "${{ steps.verify.outputs.verify_output }}"
+
+      - name: Log Verification Failure
+        if: failure()
+        run: |
+          source scripts/log_helper.sh
+          update_server_status "${{ needs.init_logging.outputs.run_id }}" \
+            "${{ matrix.server.name }}" \
+            "${{ matrix.server.ip }}" \
+            "failure" \
+            "Upgrade failed" \
+            "Verification failed or upgrade encountered errors"
+          add_error "${{ needs.init_logging.outputs.run_id }}" \
+            "Server upgrade failed: ${{ matrix.server.name }}" \
+            "Upgrade or verification step failed"
 
       - name: Cleanup Target Server
         if: always()
@@ -174,24 +362,77 @@ jobs:
         run: |
           rm -f ~/.ssh/id_rsa
 
+      - name: Upload Log Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow-logs
+          path: logs/
+          overwrite: true
+
   summary:
     name: Upgrade Summary
-    needs: [prepare, upgrade]
+    needs: [init_logging, prepare, upgrade]
     if: always()
     runs-on: ubuntu-latest
     
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Log Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: workflow-logs
+          path: logs/
+
+      - name: Finalize Workflow Log
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          source scripts/log_helper.sh
+          
+          # Determine final status
+          FINAL_STATUS="success"
+          if [ "${{ needs.upgrade.result }}" == "failure" ]; then
+            FINAL_STATUS="failure"
+          elif [ "${{ needs.prepare.result }}" == "failure" ]; then
+            FINAL_STATUS="failure"
+          fi
+          
+          # Finalize the log
+          finalize_log "${{ needs.init_logging.outputs.run_id }}" "$FINAL_STATUS"
+
       - name: Display Summary
         run: |
           echo "================================================"
           echo "🎉 Splunk Upgrade Workflow Complete"
           echo "================================================"
-          echo "🎯 Mode: ${{ github.event.inputs.target_mode }}"
+          echo "� Run ID: ${{ needs.init_logging.outputs.run_id }}"
+          echo "�🎯 Mode: ${{ github.event.inputs.target_mode }}"
           if [ "${{ github.event.inputs.target_mode }}" == "single_server" ]; then
-            echo "�️  Server: ${{ github.event.inputs.server_name }}"
+            echo "🖥️  Server: ${{ github.event.inputs.server_name }}"
           else
             echo "🖥️  Host Class: ${{ github.event.inputs.host_class }} (all servers)"
           fi
           echo "📦 Package: ${{ github.event.inputs.package_id }}"
           echo "📌 Version: ${{ needs.prepare.outputs.package_version }}"
           echo "================================================"
+          
+          # Display log file info
+          LOG_FILE="logs/${{ needs.init_logging.outputs.run_id }}.json"
+          if [ -f "$LOG_FILE" ]; then
+            echo ""
+            echo "📊 Workflow Summary:"
+            jq -r '.summary | "Total Servers: \(.total_servers)\nSuccessful: \(.successful)\nFailed: \(.failed)\nDuration: \(.duration_seconds)s"' "$LOG_FILE"
+            echo ""
+            echo "📝 Log saved to: $LOG_FILE"
+          fi
+
+      - name: Commit and Push Logs
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add logs/
+          git commit -m "Add workflow run logs: ${{ needs.init_logging.outputs.run_id }}" || echo "No changes to commit"
+          git push || echo "Failed to push changes"
+

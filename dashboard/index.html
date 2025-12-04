@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Splunk Upgrade Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🚀 Splunk Upgrade Dashboard</h1>
+                <p class="subtitle">Monitor and track your Splunk upgrade workflow executions</p>
+            </div>
+            <div class="header-actions">
+                <button id="refreshBtn" class="btn btn-primary">
+                    <span class="icon">🔄</span>
+                    Refresh
+                </button>
+                <button id="themeToggle" class="btn btn-secondary">
+                    <span class="icon">🌓</span>
+                    Toggle Theme
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-container" id="statsContainer">
+            <div class="stat-card">
+                <div class="stat-icon success">✅</div>
+                <div class="stat-content">
+                    <h3 id="totalRuns">0</h3>
+                    <p>Total Runs</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon success">🎉</div>
+                <div class="stat-content">
+                    <h3 id="successfulRuns">0</h3>
+                    <p>Successful</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon error">❌</div>
+                <div class="stat-content">
+                    <h3 id="failedRuns">0</h3>
+                    <p>Failed</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon warning">⏳</div>
+                <div class="stat-content">
+                    <h3 id="inProgressRuns">0</h3>
+                    <p>In Progress</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="filters-section">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Search by run ID, package, or server...">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="success">Success</button>
+                <button class="filter-btn" data-filter="failure">Failed</button>
+                <button class="filter-btn" data-filter="in_progress">In Progress</button>
+            </div>
+        </div>
+
+        <!-- Workflow Runs Table -->
+        <div class="table-container">
+            <table class="workflow-table">
+                <thead>
+                    <tr>
+                        <th>Run ID</th>
+                        <th>Started</th>
+                        <th>Status</th>
+                        <th>Mode</th>
+                        <th>Package</th>
+                        <th>Servers</th>
+                        <th>Duration</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="workflowTableBody">
+                    <!-- Populated by JavaScript -->
+                </tbody>
+            </table>
+            <div id="noResults" class="no-results" style="display: none;">
+                <p>📭 No workflow runs found</p>
+            </div>
+            <div id="loadingIndicator" class="loading-indicator">
+                <div class="spinner"></div>
+                <p>Loading workflow runs...</p>
+            </div>
+        </div>
+
+        <!-- Modal for Run Details -->
+        <div id="detailsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Workflow Run Details</h2>
+                    <button class="close-btn" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
