@@ -57,7 +57,7 @@ update_job_status() {
     
     if [ ! -f "$log_file" ]; then
         echo -e "${YELLOW}⚠️  Log file not found, will be created: ${log_file}${NC}"
-    fifi
+    fi
     
     local timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     
