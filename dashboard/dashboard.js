@@ -55,26 +55,37 @@ function initializeDashboard() {
     }
 }
 
-// Load workflow logs using the manifest file
+// Load workflow logs by fetching index file then loading each log
+// Matches the CSV loading pattern from user's other GitHub Pages site
 async function loadWorkflowLogs() {
     showLoading(true);
 
     try {
-        // Fetch the manifest file that lists all available logs
-        const manifestResponse = await fetch('logs-manifest.json');
-        const logFiles = await manifestResponse.json();
+        console.log('🔍 Loading workflow logs...');
 
-        console.log(`📋 Found ${logFiles.length} log files in manifest`);
+        // Fetch the logs index file (similar to fetching usecases.csv)
+        const response = await fetch('logs-index.txt');
+        const text = await response.text();
 
-        // Fetch all log files
-        const logPromises = logFiles.map(async (file) => {
+        // Parse the file - one filename per line
+        const logFiles = text.split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0 && line.endsWith('.json'));
+
+        console.log(`📋 Found ${logFiles.length} log files in index`);
+
+        // Fetch all log files (parallel loading like the CSV use cases)
+        const logPromises = logFiles.map(async (filename) => {
             try {
-                const logResponse = await fetch(`../logs/${file}`);
-                const logData = await logResponse.json();
-                console.log(`✅ Loaded: ${file}`);
-                return logData;
+                const logResponse = await fetch(`../logs/${filename}`);
+                if (logResponse.ok) {
+                    const logData = await logResponse.json();
+                    console.log(`✅ Loaded: ${filename}`);
+                    return logData;
+                }
+                return null;
             } catch (error) {
-                console.error(`❌ Error loading log file ${file}:`, error);
+                console.error(`❌ Error loading ${filename}:`, error);
                 return null;
             }
         });
@@ -97,7 +108,6 @@ async function loadWorkflowLogs() {
     } catch (error) {
         console.error('❌ Error loading workflow logs:', error);
         console.log('📭 No logs found - showing sample data');
-        // Show sample data for testing
         showSampleData();
     } finally {
         showLoading(false);

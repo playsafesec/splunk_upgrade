@@ -432,10 +432,12 @@ jobs:
             echo "📝 Log saved to: $LOG_FILE"
           fi
 
-      - name: Generate Logs Manifest
+      - name: Update Logs Index
         run: |
-          echo "📝 Generating logs manifest for dashboard..."
-          bash scripts/generate_manifest.sh
+          echo "📝 Updating logs index file..."
+          # Create simple text file with one log filename per line
+          ls -1 logs/*.json | xargs -n1 basename > dashboard/logs-index.txt
+          echo "✅ Index updated with $(wc -l < dashboard/logs-index.txt) log files"
 
       - name: Commit and Push Logs
         env:
@@ -444,14 +446,14 @@ jobs:
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Add logs and manifest
+          # Add logs and index file
           git add logs/
-          git add dashboard/logs-manifest.json
+          git add dashboard/logs-index.txt
           
           if git diff --staged --quiet; then
             echo "📭 No new logs to commit"
           else
-            echo "📝 Committing new log files and manifest..."
+            echo "📝 Committing new log files and index..."
             git commit -m "📊 Add workflow run logs: ${{ needs.init_logging.outputs.run_id }}"
             
             echo "🚀 Pushing logs to repository..."
