@@ -409,7 +409,7 @@ jobs:
           
           # Copy to dashboard/logs for GitHub Pages
           mkdir -p dashboard/logs
-          cp "dashboard/logs/${{ needs.init_logging.outputs.run_id }}.json" "dashboard/dashboard/logs/${{ needs.init_logging.outputs.run_id }}.json"
+          cp "dashboard/logs/${{ needs.init_logging.outputs.run_id }}.json" "dashboard/logs/${{ needs.init_logging.outputs.run_id }}.json"
 
       - name: Display Summary
         run: |
@@ -435,7 +435,7 @@ jobs:
             jq -r '.summary | "Total Servers: \(.total_servers)\nSuccessful: \(.successful)\nFailed: \(.failed)\nDuration: \(.duration_seconds)s"' "$LOG_FILE"
             echo ""
             echo "📝 Log saved to: $LOG_FILE"
-            echo "📝 Dashboard log: dashboard/dashboard/logs/${{ needs.init_logging.outputs.run_id }}.json"
+            echo "📝 Dashboard log: dashboard/logs/${{ needs.init_logging.outputs.run_id }}.json"
           fi
 
       - name: Update Dashboard Log List
