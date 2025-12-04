@@ -55,36 +55,34 @@ function initializeDashboard() {
     }
 }
 
-// Load workflow logs from the logs directory
+// Load workflow logs using the manifest file
 async function loadWorkflowLogs() {
     showLoading(true);
 
     try {
-        // Fetch the list of log files
-        const response = await fetch('../logs/');
-        const text = await response.text();
+        // Fetch the manifest file that lists all available logs
+        const manifestResponse = await fetch('logs-manifest.json');
+        const logFiles = await manifestResponse.json();
 
-        // Parse HTML to extract JSON file links
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(text, 'text/html');
-        const links = Array.from(doc.querySelectorAll('a'))
-            .map(a => a.getAttribute('href'))
-            .filter(href => href && href.endsWith('.json'));
+        console.log(`📋 Found ${logFiles.length} log files in manifest`);
 
         // Fetch all log files
-        const logPromises = links.map(async (file) => {
+        const logPromises = logFiles.map(async (file) => {
             try {
                 const logResponse = await fetch(`../logs/${file}`);
                 const logData = await logResponse.json();
+                console.log(`✅ Loaded: ${file}`);
                 return logData;
             } catch (error) {
-                console.error(`Error loading log file ${file}:`, error);
+                console.error(`❌ Error loading log file ${file}:`, error);
                 return null;
             }
         });
 
         const logs = await Promise.all(logPromises);
         allLogs = logs.filter(log => log !== null);
+
+        console.log(`📊 Successfully loaded ${allLogs.length} workflow runs`);
 
         // Sort by started_at (most recent first)
         allLogs.sort((a, b) => {
@@ -97,7 +95,8 @@ async function loadWorkflowLogs() {
         filterLogs('');
 
     } catch (error) {
-        console.error('Error loading workflow logs:', error);
+        console.error('❌ Error loading workflow logs:', error);
+        console.log('📭 No logs found - showing sample data');
         // Show sample data for testing
         showSampleData();
     } finally {

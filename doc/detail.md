@@ -5,7 +5,7 @@
 
 ## Executive Summary
 
-This document outlines the enterprise automation infrastructure developed to standardize and streamline Splunk Enterprise upgrade processes across distributed server environments. The implementation leverages GitHub Actions for continuous integration and delivery, combined with robust shell scripting for safe, repeatable upgrade procedures.
+This document outlines enterprise automation infrastructure developed to standardize and streamline Splunk Enterprise upgrade processes across distributed server environments. The implementation leverages GitHub Actions for continuous integration and delivery, combined with robust shell scripting for safe, repeatable upgrade procedures.
 
 **Key Benefits:**
 - Automated deployment reducing manual intervention and human error

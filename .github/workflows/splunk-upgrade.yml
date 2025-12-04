@@ -432,6 +432,11 @@ jobs:
             echo "📝 Log saved to: $LOG_FILE"
           fi
 
+      - name: Generate Logs Manifest
+        run: |
+          echo "📝 Generating logs manifest for dashboard..."
+          bash scripts/generate_manifest.sh
+
       - name: Commit and Push Logs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -439,13 +444,14 @@ jobs:
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Check if there are changes to commit
+          # Add logs and manifest
           git add logs/
+          git add dashboard/logs-manifest.json
           
           if git diff --staged --quiet; then
             echo "📭 No new logs to commit"
           else
-            echo "📝 Committing new log files..."
+            echo "📝 Committing new log files and manifest..."
             git commit -m "📊 Add workflow run logs: ${{ needs.init_logging.outputs.run_id }}"
             
             echo "🚀 Pushing logs to repository..."
