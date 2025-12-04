@@ -1,34 +1,86 @@
-name: Splunk Enterprise Upgrade
+name: Splunk Upgrade
 
 on:
   workflow_dispatch:
     inputs:
-      target_server:
-        description: 'Target server IP/hostname'
+      host_class:
+        description: 'Select host class (azure_hf or azure_uf)'
         required: true
-        default: '20.84.40.194'
-      splunk_version:
-        description: 'Target Splunk version'
+        type: choice
+        options:
+          - azure_hf
+          - azure_uf
+      package_id:
+        description: 'Select package to install'
         required: true
-        default: '9.2.9'
-
-env:
-  SPLUNK_HOME: '/opt/splunk'
-  SPLUNK_INSTALLER_URL: 'https://download.splunk.com/products/splunk/releases/9.2.8/linux/splunk-9.2.8-811db24f0af2-Linux-x86_64.tgz'
+        type: choice
+        options:
+          - splunk_enterprise_9.2.9
+          - splunk_enterprise_9.2.8
+          - splunk_enterprise_9.2.7
+          - splunk_uf_9.4.5
+          - splunk_uf_9.4.6
 
 jobs:
-  upgrade:
-    name: Upgrade Splunk Enterprise
+  prepare:
+    name: Prepare Upgrade Configuration
     runs-on: ubuntu-latest
+    outputs:
+      servers: ${{ steps.parse.outputs.servers }}
+      package_url: ${{ steps.parse.outputs.package_url }}
+      package_version: ${{ steps.parse.outputs.package_version }}
+      package_type: ${{ steps.parse.outputs.package_type }}
+      install_path: ${{ steps.parse.outputs.install_path }}
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download Splunk Enterprise Installer
+      - name: Parse inventory files
+        id: parse
+        run: |
+          # Install jq for JSON parsing
+          sudo apt-get update && sudo apt-get install -y jq
+          
+          # Parse host inventory
+          SERVERS=$(jq -c '.classes[] | select(.name == "${{ github.event.inputs.host_class }}") | .servers' inventory/host.json)
+          echo "servers=$SERVERS" >> $GITHUB_OUTPUT
+          
+          # Parse package inventory
+          PACKAGE_URL=$(jq -r '.packages[] | select(.id == "${{ github.event.inputs.package_id }}") | .download_url' inventory/package.json)
+          PACKAGE_VERSION=$(jq -r '.packages[] | select(.id == "${{ github.event.inputs.package_id }}") | .version' inventory/package.json)
+          PACKAGE_TYPE=$(jq -r '.packages[] | select(.id == "${{ github.event.inputs.package_id }}") | .type' inventory/package.json)
+          INSTALL_PATH=$(jq -r '.packages[] | select(.id == "${{ github.event.inputs.package_id }}") | .install_path' inventory/package.json)
+          
+          echo "package_url=$PACKAGE_URL" >> $GITHUB_OUTPUT
+          echo "package_version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
+          echo "package_type=$PACKAGE_TYPE" >> $GITHUB_OUTPUT
+          echo "install_path=$INSTALL_PATH" >> $GITHUB_OUTPUT
+          
+          echo "📦 Selected Package: ${{ github.event.inputs.package_id }}"
+          echo "🔗 Download URL: $PACKAGE_URL"
+          echo "📌 Version: $PACKAGE_VERSION"
+          echo "🖥️  Host Class: ${{ github.event.inputs.host_class }}"
+
+  upgrade:
+    name: Upgrade Server
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        server: ${{ fromJson(needs.prepare.outputs.servers) }}
+      max-parallel: 1  # Upgrade one server at a time
+      fail-fast: false  # Continue even if one server fails
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Splunk Installer
         run: |
           mkdir -p ${{ runner.temp }}/installer
-          wget -O ${{ runner.temp }}/installer/splunk-installer.tgz "${{ env.SPLUNK_INSTALLER_URL }}"
+          echo "📥 Downloading package from: ${{ needs.prepare.outputs.package_url }}"
+          wget -O ${{ runner.temp }}/installer/splunk-installer.tgz "${{ needs.prepare.outputs.package_url }}"
           ls -lh ${{ runner.temp }}/installer/
 
       - name: Setup SSH Key
@@ -36,42 +88,70 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ github.event.inputs.target_server || '20.84.40.194' }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ matrix.server.ip }} >> ~/.ssh/known_hosts
+
+      - name: Display Server Info
+        run: |
+          echo "🖥️  Upgrading Server: ${{ matrix.server.name }}"
+          echo "📍 IP Address: ${{ matrix.server.ip }}"
+          echo "🎭 Role: ${{ matrix.server.role }}"
+          echo "🐧 OS: ${{ matrix.server.os }}"
+          echo "📦 Package Version: ${{ needs.prepare.outputs.package_version }}"
 
       - name: Copy Upgrade Script to Target Server
         run: |
-          scp -i ~/.ssh/id_rsa upgrade_splunk_uf.sh ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.84.40.194' }}:/tmp/upgrade_splunk_uf.sh
-          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.84.40.194' }} "chmod +x /tmp/upgrade_splunk_uf.sh"
+          scp -i ~/.ssh/id_rsa upgrade_splunk.sh ${{ secrets.SSH_USER }}@${{ matrix.server.ip }}:/tmp/upgrade_splunk.sh
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ matrix.server.ip }} "chmod +x /tmp/upgrade_splunk.sh"
 
       - name: Copy Installer to Target Server
         run: |
-          scp -i ~/.ssh/id_rsa ${{ runner.temp }}/installer/splunk-installer.tgz ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.84.40.194' }}:/tmp/splunk_installer.tgz
+          echo "📤 Copying installer to ${{ matrix.server.name }}..."
+          scp -i ~/.ssh/id_rsa ${{ runner.temp }}/installer/splunk-installer.tgz ${{ secrets.SSH_USER }}@${{ matrix.server.ip }}:/opt/splunk_installer.tgz
 
       - name: Execute Upgrade on Target Server
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.84.40.194' }} << 'EOF'
-            sudo SPLUNK_VERSION="${{ github.event.inputs.splunk_version || '9.2.5' }}" \
-                 SPLUNK_INSTALLER_PATH="/tmp/splunk_installer.tgz" \
-                 SPLUNK_HOME="${{ env.SPLUNK_HOME }}" \
-                 /tmp/upgrade_splunk_uf.sh
+          echo "🚀 Starting upgrade on ${{ matrix.server.name }}..."
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ matrix.server.ip }} << 'EOF'
+            sudo SPLUNK_VERSION="${{ needs.prepare.outputs.package_version }}" \
+                 SPLUNK_INSTALLER_PATH="/opt/splunk_installer.tgz" \
+                 SPLUNK_HOME="${{ needs.prepare.outputs.install_path }}" \
+                 /tmp/upgrade_splunk.sh
           EOF
 
       - name: Verify Upgrade
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.84.40.194' }} << 'EOF'
-            sudo ${{ env.SPLUNK_HOME }}/bin/splunk status
-            VERSION=$(sudo ${{ env.SPLUNK_HOME }}/bin/splunk version)
-            echo "Upgrade successful!"
-            echo "Version: $VERSION"
+          echo "✅ Verifying upgrade on ${{ matrix.server.name }}..."
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ matrix.server.ip }} << 'EOF'
+            sudo ${{ needs.prepare.outputs.install_path }}/bin/splunk status
+            VERSION=$(sudo ${{ needs.prepare.outputs.install_path }}/bin/splunk version)
+            echo "✅ Upgrade successful on ${{ matrix.server.name }}!"
+            echo "📌 Version: $VERSION"
           EOF
 
       - name: Cleanup Target Server
         if: always()
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ github.event.inputs.target_server || '20.84.40.194' }} \
-            "rm -f /tmp/upgrade_splunk_uf.sh /tmp/splunk_installer.tgz" || true
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ matrix.server.ip }} \
+            "rm -f /tmp/upgrade_splunk.sh /opt/splunk_installer.tgz" || true
 
       - name: Cleanup SSH Key
         if: always()
         run: |
           rm -f ~/.ssh/id_rsa
+
+  summary:
+    name: Upgrade Summary
+    needs: [prepare, upgrade]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Display Summary
+        run: |
+          echo "================================================"
+          echo "🎉 Splunk Upgrade Workflow Complete"
+          echo "================================================"
+          echo "📦 Package: ${{ github.event.inputs.package_id }}"
+          echo "📌 Version: ${{ needs.prepare.outputs.package_version }}"
+          echo "🖥️  Host Class: ${{ github.event.inputs.host_class }}"
+          echo "================================================"

@@ -28,7 +28,7 @@ You can trigger the workflow in two ways:
 #### Automatic Trigger
 The workflow automatically runs when you push changes to:
 - `.github/workflows/splunk-upgrade.yml`
-- `upgrade_splunk_uf.sh`
+- `upgrade_splunk.sh`
 
 ## Configuration
 
@@ -62,7 +62,7 @@ The workflow performs the following steps:
 ## Files
 
 - `.github/workflows/splunk-upgrade.yml` - GitHub Actions workflow
-- `upgrade_splunk_uf.sh` - Upgrade script (located in repo root or azure-devops folder)
+- `upgrade_splunk.sh` - Upgrade script (located in repo root or azure-devops folder)
 
 ## Troubleshooting
 

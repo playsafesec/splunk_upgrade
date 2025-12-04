@@ -43,4 +43,4 @@ All workflows support manual triggering via `workflow_dispatch`. Some may also t
 ## Related Files
 
 The workflows reference the upgrade script:
-- `../upgrade_splunk_uf.sh` - Splunk upgrade script
+- `../upgrade_splunk.sh` - Splunk upgrade script

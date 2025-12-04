@@ -188,7 +188,7 @@ The workflow establishes secure remote connections using:
 
 ### 3.3 Upgrade Script Implementation
 
-The `upgrade_splunk_uf.sh` script implements sophisticated upgrade logic with comprehensive error handling.
+The `upgrade_splunk.sh` script implements sophisticated upgrade logic with comprehensive error handling.
 
 #### Pre-Upgrade Validation
 
@@ -586,7 +586,7 @@ The implementation includes the following files:
 | File | Purpose | Maintainer |
 |------|---------|-----------|
 | `.github/workflows/splunk-upgrade.yml` | GitHub Actions workflow | DevOps Team |
-| `upgrade_splunk_uf.sh` | Upgrade execution script | DevOps Team |
+| `upgrade_splunk.sh` | Upgrade execution script | DevOps Team |
 | `update_github.sh` | Git management utility | Development Team |
 | `README.md` | Quick start guide | Documentation |
 | `GITHUB_ACTIONS_GUIDE.md` | Detailed setup guide | DevOps Team |

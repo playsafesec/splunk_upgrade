@@ -1,0 +1,59 @@
+{
+    "packages": [
+        {
+            "id": "splunk_enterprise_9.2.9",
+            "name": "Splunk Enterprise",
+            "type": "enterprise",
+            "version": "9.2.9",
+            "build": "809c28ff0945",
+            "platform": "Linux-x86_64",
+            "download_url": "https://download.splunk.com/products/splunk/releases/9.2.9/linux/splunk-9.2.9-809c28ff0945-Linux-x86_64.tgz",
+            "filename": "splunk-9.2.9-809c28ff0945-Linux-x86_64.tgz",
+            "install_path": "/opt/splunk"
+        },
+        {
+            "id": "splunk_enterprise_9.2.8",
+            "name": "Splunk Enterprise",
+            "type": "enterprise",
+            "version": "9.2.8",
+            "build": "811db24f0af2",
+            "platform": "Linux-x86_64",
+            "download_url": "https://download.splunk.com/products/splunk/releases/9.2.8/linux/splunk-9.2.8-811db24f0af2-Linux-x86_64.tgz",
+            "filename": "splunk-9.2.8-811db24f0af2-Linux-x86_64.tgz",
+            "install_path": "/opt/splunk"
+        },
+        {
+            "id": "splunk_enterprise_9.2.7",
+            "name": "Splunk Enterprise",
+            "type": "enterprise",
+            "version": "9.2.7",
+            "build": "b6481e66baf5",
+            "platform": "Linux-x86_64",
+            "download_url": "https://download.splunk.com/products/splunk/releases/9.2.7/linux/splunk-9.2.7-b6481e66baf5-Linux-x86_64.tgz",
+            "filename": "splunk-9.2.7-b6481e66baf5-Linux-x86_64.tgz",
+            "install_path": "/opt/splunk"
+        },
+        {
+            "id": "splunk_uf_9.4.5",
+            "name": "Splunk Universal Forwarder",
+            "type": "forwarder",
+            "version": "9.4.5",
+            "build": "8fb2a6c586a5",
+            "platform": "linux-amd64",
+            "download_url": "https://download.splunk.com/products/universalforwarder/releases/9.4.5/linux/splunkforwarder-9.4.5-8fb2a6c586a5-linux-amd64.tgz",
+            "filename": "splunkforwarder-9.4.5-8fb2a6c586a5-linux-amd64.tgz",
+            "install_path": "/opt/splunkforwarder"
+        },
+        {
+            "id": "splunk_uf_9.4.6",
+            "name": "Splunk Universal Forwarder",
+            "type": "forwarder",
+            "version": "9.4.6",
+            "build": "60284236e579",
+            "platform": "linux-amd64",
+            "download_url": "https://download.splunk.com/products/universalforwarder/releases/9.4.6/linux/splunkforwarder-9.4.6-60284236e579-linux-amd64.tgz",
+            "filename": "splunkforwarder-9.4.6-60284236e579-linux-amd64.tgz",
+            "install_path": "/opt/splunkforwarder"
+        }
+    ]
+}

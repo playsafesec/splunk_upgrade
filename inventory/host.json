@@ -1,0 +1,42 @@
+{
+    "classes": [
+        {
+            "name": "azure_hf",
+            "servers": [
+                {
+                    "sn": "1",
+                    "ip": "20.84.40.194",
+                    "name": "azure_hf_1",
+                    "role": "HF",
+                    "os": "redhat"
+                },
+                {
+                    "sn": "2",
+                    "ip": "30.84.50.94",
+                    "name": "azure_hf_2",
+                    "role": "HF",
+                    "os": "redhat"
+                }
+            ]
+        },
+        {
+            "name": "azure_uf",
+            "servers": [
+                {
+                    "sn": "1",
+                    "ip": "64.34.40.194",
+                    "name": "azure_uf_1",
+                    "role": "UF",
+                    "os": "redhat"
+                },
+                {
+                    "sn": "2",
+                    "ip": "54.84.90.84",
+                    "name": "azure_uf_2",
+                    "role": "UF",
+                    "os": "redhat"
+                }
+            ]
+        }
+    ]
+}
