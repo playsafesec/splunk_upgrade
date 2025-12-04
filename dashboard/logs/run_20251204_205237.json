@@ -1,0 +1,93 @@
+{
+    "run_id": "run_20251204_155334",
+    "workflow_name": "Splunk Upgrade",
+    "started_at": "2025-12-04T15:53:00Z",
+    "completed_at": "2025-12-04T16:15:30Z",
+    "status": "success",
+    "inputs": {
+        "target_mode": "single_server",
+        "host_class": "azure_hf",
+        "server_name": "azure_hf_1",
+        "package_id": "splunk_enterprise_9.3.2"
+    },
+    "jobs": {
+        "prepare": {
+            "status": "success",
+            "started_at": "2025-12-04T15:53:15Z",
+            "completed_at": "2025-12-04T15:54:00Z",
+            "outputs": {
+                "servers": "[{\"name\":\"azure_hf_1\",\"ip\":\"10.0.0.5\",\"role\":\"heavy_forwarder\",\"os\":\"ubuntu\"}]",
+                "package_url": "https://download.splunk.com/products/splunk/releases/9.3.2/linux/splunk-9.3.2-linux-2.6-amd64.deb",
+                "package_version": "9.3.2",
+                "package_type": "enterprise",
+                "install_path": "/opt/splunk"
+            },
+            "logs": [
+                {
+                    "timestamp": "2025-12-04T15:53:20Z",
+                    "message": "Parsing inventory files"
+                },
+                {
+                    "timestamp": "2025-12-04T15:53:45Z",
+                    "message": "Package and server information validated"
+                }
+            ]
+        },
+        "upgrade": {
+            "servers": [
+                {
+                    "name": "azure_hf_1",
+                    "ip": "10.0.0.5",
+                    "status": "success",
+                    "started_at": "2025-12-04T15:54:30Z",
+                    "completed_at": "2025-12-04T16:14:20Z",
+                    "steps": [
+                        {
+                            "name": "Server upgrade started",
+                            "status": "running",
+                            "timestamp": "2025-12-04T15:54:30Z",
+                            "output": "Initializing upgrade for azure_hf_1"
+                        },
+                        {
+                            "name": "Downloaded Splunk installer",
+                            "status": "running",
+                            "timestamp": "2025-12-04T15:56:15Z",
+                            "output": "Package downloaded successfully"
+                        },
+                        {
+                            "name": "SSH connection established",
+                            "status": "running",
+                            "timestamp": "2025-12-04T15:57:00Z",
+                            "output": "SSH key configured and connection ready"
+                        },
+                        {
+                            "name": "Installer copied to server",
+                            "status": "running",
+                            "timestamp": "2025-12-04T15:58:30Z",
+                            "output": "Package transferred to target server"
+                        },
+                        {
+                            "name": "Upgrade script executed",
+                            "status": "running",
+                            "timestamp": "2025-12-04T16:12:45Z",
+                            "output": "Splunk upgrade completed on target server"
+                        },
+                        {
+                            "name": "Upgrade verified",
+                            "status": "success",
+                            "timestamp": "2025-12-04T16:14:20Z",
+                            "output": "Splunk 9.3.2 (build a7edf24cfbd8)\\nSplunk is running (PID: 12345)\\nVersion: 9.3.2"
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "summary": {
+        "total_servers": 1,
+        "successful": 1,
+        "failed": 0,
+        "duration_seconds": 1350
+    },
+    "errors": []
+}
