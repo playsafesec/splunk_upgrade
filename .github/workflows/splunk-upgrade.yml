@@ -482,10 +482,6 @@ jobs:
           
           # Finalize the log
           finalize_log "${{ needs.init_logging.outputs.run_id }}" "$FINAL_STATUS"
-          
-          # Copy to dashboard/logs for GitHub Pages
-          mkdir -p dashboard/logs
-          cp "dashboard/logs/${{ needs.init_logging.outputs.run_id }}.json" "dashboard/logs/${{ needs.init_logging.outputs.run_id }}.json"
 
       - name: Display Summary
         run: |
