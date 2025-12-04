@@ -56,7 +56,8 @@ update_job_status() {
     local log_file="dashboard/logs/${run_id}.json"
     
     if [ ! -f "$log_file" ]; then
-        echo -e "${YELLOW}⚠️  Log file not found, will be created: ${log_file}${NC}"
+        echo -e "${RED}❌ Log file not found: ${log_file}${NC}"
+        return 1
     fi
     
     local timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"

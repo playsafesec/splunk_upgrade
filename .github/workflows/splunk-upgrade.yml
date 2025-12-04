@@ -222,7 +222,7 @@ jobs:
 
       - name: Move Log Files to Correct Location
         run: |
-          echo "� Moving log files to dashboard/logs/"
+          echo "📦 Moving log files to dashboard/logs/"
           mkdir -p dashboard/logs
           
           # Move any JSON files from root to dashboard/logs (except inventory files)
@@ -233,11 +233,12 @@ jobs:
             fi
           done
           
-          # Move any tmp files too
+          # Move any tmp files and rename them to .json
           for file in *.json.tmp; do
             if [ -f "$file" ]; then
-              echo "Moving $file to dashboard/logs/"
-              mv "$file" dashboard/logs/
+              base_name="${file%.tmp}"
+              echo "Moving $file to dashboard/logs/$base_name"
+              mv "$file" "dashboard/logs/$base_name"
             fi
           done
           
