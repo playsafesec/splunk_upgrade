@@ -3,13 +3,25 @@ name: Splunk Upgrade
 on:
   workflow_dispatch:
     inputs:
+      target_mode:
+        description: 'Upgrade mode'
+        required: true
+        type: choice
+        options:
+          - all_servers_in_class
+          - single_server
+        default: 'single_server'
       host_class:
-        description: 'Select host class (azure_hf or azure_uf)'
+        description: 'Select host class (required for both modes)'
         required: true
         type: choice
         options:
           - azure_hf
           - azure_uf
+      server_name:
+        description: 'Server name (only for single_server mode: azure_hf_1, azure_hf_2, azure_uf_1, azure_uf_2)'
+        required: false
+        type: string
       package_id:
         description: 'Select package to install'
         required: true
@@ -42,8 +54,25 @@ jobs:
           # Install jq for JSON parsing
           sudo apt-get update && sudo apt-get install -y jq
           
-          # Parse host inventory
-          SERVERS=$(jq -c '.classes[] | select(.name == "${{ github.event.inputs.host_class }}") | .servers' inventory/host.json)
+          # Parse host inventory based on mode
+          if [ "${{ github.event.inputs.target_mode }}" == "single_server" ]; then
+            # Single server mode - filter by server name
+            SERVERS=$(jq -c '.classes[] | select(.name == "${{ github.event.inputs.host_class }}") | .servers[] | select(.name == "${{ github.event.inputs.server_name }}") | [.]' inventory/host.json)
+            
+            if [ "$SERVERS" == "[]" ] || [ -z "$SERVERS" ]; then
+              echo "❌ Error: Server '${{ github.event.inputs.server_name }}' not found in class '${{ github.event.inputs.host_class }}'"
+              exit 1
+            fi
+            
+            echo "🎯 Single Server Mode: ${{ github.event.inputs.server_name }}"
+          else
+            # All servers in class mode
+            SERVERS=$(jq -c '.classes[] | select(.name == "${{ github.event.inputs.host_class }}") | .servers' inventory/host.json)
+            
+            SERVER_COUNT=$(echo "$SERVERS" | jq '. | length')
+            echo "🌐 All Servers Mode: Upgrading $SERVER_COUNT servers in class '${{ github.event.inputs.host_class }}'"
+          fi
+          
           echo "servers=$SERVERS" >> $GITHUB_OUTPUT
           
           # Parse package inventory
@@ -151,7 +180,12 @@ jobs:
           echo "================================================"
           echo "🎉 Splunk Upgrade Workflow Complete"
           echo "================================================"
+          echo "🎯 Mode: ${{ github.event.inputs.target_mode }}"
+          if [ "${{ github.event.inputs.target_mode }}" == "single_server" ]; then
+            echo "�️  Server: ${{ github.event.inputs.server_name }}"
+          else
+            echo "🖥️  Host Class: ${{ github.event.inputs.host_class }} (all servers)"
+          fi
           echo "📦 Package: ${{ github.event.inputs.package_id }}"
           echo "📌 Version: ${{ needs.prepare.outputs.package_version }}"
-          echo "🖥️  Host Class: ${{ github.event.inputs.host_class }}"
           echo "================================================"
