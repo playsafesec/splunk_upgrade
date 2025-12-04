@@ -37,12 +37,6 @@ jobs:
         run: |
           mkdir -p _site
           cp -r dashboard/* _site/
-          cp -r logs _site/
-          
-          # Create index.html redirect in root if needed
-          if [ ! -f "_site/index.html" ]; then
-            echo "Dashboard already has index.html"
-          fi
           
           echo "📦 Deployment directory created"
           ls -la _site/
