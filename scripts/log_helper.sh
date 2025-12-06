@@ -63,26 +63,34 @@ update_job_status() {
     
     local timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     
+    # Debug: show what we're receiving
+    echo "Debug: update_job_status output_json length: ${#output_json}"
+    echo "Debug: update_job_status output_json value: $output_json"
+    
     # Use jq to update the log file
-    # Redirect to tmp file first, then move if successful
+    # Write output_json to a temp file to avoid shell quoting issues
+    local json_tmp_file="/tmp/output_json_$$.json"
+    echo "$output_json" > "$json_tmp_file"
+    
     if jq --arg job "$job_name" \
        --arg status "$status" \
        --arg timestamp "$timestamp" \
-       --argjson output "$output_json" \
+       --slurpfile output "$json_tmp_file" \
        '
        .jobs[$job] = {
          "status": $status,
          "started_at": (if .jobs[$job].started_at then .jobs[$job].started_at else $timestamp end),
          "completed_at": (if $status == "success" or $status == "failure" then $timestamp else null end),
-         "outputs": $output,
+         "outputs": $output[0],
          "logs": (if .jobs[$job].logs then .jobs[$job].logs else [] end)
        }
        ' "$log_file" > "${log_file}.tmp"; then
        mv "${log_file}.tmp" "$log_file"
+       rm -f "$json_tmp_file"
        echo -e "${BLUE}📊 Updated job '${job_name}' status: ${status}${NC}"
     else
        echo -e "${RED}❌ Failed to update job status (jq error)${NC}"
-       rm -f "${log_file}.tmp"
+       rm -f "${log_file}.tmp" "$json_tmp_file"
        return 1
     fi
 }
