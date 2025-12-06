@@ -188,12 +188,22 @@ jobs:
           source scripts/log_helper.sh
           
           # Create outputs JSON
+          # Create outputs JSON
+          # Use env vars to avoid shell escaping issues
+          export SERVERS='${{ steps.parse.outputs.servers }}'
+          export URL='${{ steps.parse.outputs.package_url }}'
+          export VERSION='${{ steps.parse.outputs.package_version }}'
+          export TYPE='${{ steps.parse.outputs.package_type }}'
+          export PATH_VAL='${{ steps.parse.outputs.install_path }}'
+          
+          echo "Debug: SERVERS=$SERVERS"
+          
           OUTPUTS_JSON=$(jq -n \
-            --arg servers '${{ steps.parse.outputs.servers }}' \
-            --arg url "${{ steps.parse.outputs.package_url }}" \
-            --arg version "${{ steps.parse.outputs.package_version }}" \
-            --arg type "${{ steps.parse.outputs.package_type }}" \
-            --arg path "${{ steps.parse.outputs.install_path }}" \
+            --argjson servers "$SERVERS" \
+            --arg url "$URL" \
+            --arg version "$VERSION" \
+            --arg type "$TYPE" \
+            --arg path "$PATH_VAL" \
             '{
               servers: $servers,
               package_url: $url,
@@ -201,6 +211,8 @@ jobs:
               package_type: $type,
               install_path: $path
             }')
+            
+          echo "Debug: OUTPUTS_JSON=$OUTPUTS_JSON"
           
           update_job_status "${{ needs.init_logging.outputs.run_id }}" "prepare" "success" "$OUTPUTS_JSON"
 
