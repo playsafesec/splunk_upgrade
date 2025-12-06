@@ -1,0 +1,35 @@
+{
+  "run_id": "run_20251206_074435",
+  "workflow_name": "Splunk Upgrade",
+  "started_at": "2025-12-06T07:44:35Z",
+  "completed_at": "2025-12-06T07:45:17Z",
+  "status": "failure",
+  "inputs": {
+    "target_mode": "single_server",
+    "host_class": "azure_hf",
+    "server_name": "azure_hf_1",
+    "package_id": "splunk_enterprise_9.2.10"
+  },
+  "jobs": {
+    "prepare": {
+      "status": "failure",
+      "started_at": "2025-12-06T07:44:57Z",
+      "completed_at": "2025-12-06T07:44:57Z",
+      "outputs": {},
+      "logs": []
+    }
+  },
+  "summary": {
+    "total_servers": 0,
+    "successful": 0,
+    "failed": 0,
+    "duration_seconds": 42
+  },
+  "errors": [
+    {
+      "timestamp": "2025-12-06T07:44:57Z",
+      "message": "Prepare job failed",
+      "context": "Failed during inventory parsing"
+    }
+  ]
+}
