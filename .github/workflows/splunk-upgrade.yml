@@ -214,7 +214,9 @@ jobs:
             
           echo "Debug: OUTPUTS_JSON=$OUTPUTS_JSON"
           
-          update_job_status "${{ needs.init_logging.outputs.run_id }}" "prepare" "success" "$OUTPUTS_JSON"
+          # Pass JSON via env var to avoid shell argument issues
+          export OUTPUT_JSON_ENV="$OUTPUTS_JSON"
+          update_job_status "${{ needs.init_logging.outputs.run_id }}" "prepare" "success"
 
       - name: Update Job Status - Failed
         if: failure()

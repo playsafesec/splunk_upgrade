@@ -52,7 +52,8 @@ update_job_status() {
     local run_id="$1"
     local job_name="$2"
     local status="$3"
-    local output_json="${4:-{}}"
+    # Prefer environment variable for JSON to avoid shell argument parsing issues
+    local output_json="${OUTPUT_JSON_ENV:-${4:-{}}}"
     local log_file="dashboard/logs/${run_id}.json"
     
     if [ ! -f "$log_file" ]; then
