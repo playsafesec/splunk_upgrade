@@ -127,14 +127,8 @@ jobs:
             fi
           done
           
-          # Move any tmp files and rename them to .json
-          for file in *.json.tmp; do
-            if [ -f "$file" ]; then
-              base_name="${file%.tmp}"
-              echo "Moving $file to dashboard/logs/$base_name"
-              mv "$file" "dashboard/logs/$base_name"
-            fi
-          done
+          # Remove any tmp files to prevent confusion
+          rm -f *.json.tmp
           
           echo "✅ Files moved successfully"
           ls -la dashboard/logs/
@@ -258,14 +252,8 @@ jobs:
             fi
           done
           
-          # Move any tmp files and rename them to .json
-          for file in *.json.tmp; do
-            if [ -f "$file" ]; then
-              base_name="${file%.tmp}"
-              echo "Moving $file to dashboard/logs/$base_name"
-              mv "$file" "dashboard/logs/$base_name"
-            fi
-          done
+          # Remove any tmp files to prevent confusion
+          rm -f *.json.tmp
           
           echo "✅ Files moved successfully"
           ls -la dashboard/logs/

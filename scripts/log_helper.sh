@@ -101,7 +101,8 @@ add_job_log() {
     
     local timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     
-    jq --arg job "$job_name" \
+    # Use jq to update the log file
+    if jq --arg job "$job_name" \
        --arg message "$log_message" \
        --arg timestamp "$timestamp" \
        '
@@ -109,7 +110,13 @@ add_job_log() {
          "timestamp": $timestamp,
          "message": $message
        }]
-       ' "$log_file" > "${log_file}.tmp" && mv "${log_file}.tmp" "$log_file"
+       ' "$log_file" > "${log_file}.tmp"; then
+       mv "${log_file}.tmp" "$log_file"
+    else
+       echo -e "${RED}❌ Failed to add log entry (jq error)${NC}"
+       rm -f "${log_file}.tmp"
+       return 1
+    fi
 }
 
 # Update server upgrade status within the upgrade job
@@ -133,7 +140,7 @@ update_server_status() {
     # Escape special characters in output
     step_output=$(echo "$step_output" | jq -Rs .)
     
-    jq --arg server "$server_name" \
+    if jq --arg server "$server_name" \
        --arg ip "$server_ip" \
        --arg status "$status" \
        --arg step "$step_name" \
@@ -172,9 +179,14 @@ update_server_status() {
            }]
          }]
        end
-       ' "$log_file" > "${log_file}.tmp" && mv "${log_file}.tmp" "$log_file"
-    
-    echo -e "${BLUE}🖥️  Updated server '${server_name}' - Step: ${step_name} - Status: ${status}${NC}"
+       ' "$log_file" > "${log_file}.tmp"; then
+       mv "${log_file}.tmp" "$log_file"
+       echo -e "${BLUE}🖥️  Updated server '${server_name}' - Step: ${step_name} - Status: ${status}${NC}"
+    else
+       echo -e "${RED}❌ Failed to update server status (jq error)${NC}"
+       rm -f "${log_file}.tmp"
+       return 1
+    fi
 }
 
 # Finalize the log file with completion status and summary
@@ -191,7 +203,7 @@ finalize_log() {
     
     local timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     
-    jq --arg status "$final_status" \
+    if jq --arg status "$final_status" \
        --arg timestamp "$timestamp" \
        '
        .completed_at = $timestamp |
@@ -206,10 +218,15 @@ finalize_log() {
            0
          end
        )
-       ' "$log_file" > "${log_file}.tmp" && mv "${log_file}.tmp" "$log_file"
-    
-    echo -e "${GREEN}🎉 Log finalized with status: ${final_status}${NC}"
-    echo -e "${GREEN}📁 Log saved to: ${log_file}${NC}"
+       ' "$log_file" > "${log_file}.tmp"; then
+       mv "${log_file}.tmp" "$log_file"
+       echo -e "${GREEN}🎉 Log finalized with status: ${final_status}${NC}"
+       echo -e "${GREEN}📁 Log saved to: ${log_file}${NC}"
+    else
+       echo -e "${RED}❌ Failed to finalize log (jq error)${NC}"
+       rm -f "${log_file}.tmp"
+       return 1
+    fi
 }
 
 # Add an error to the log
@@ -227,7 +244,7 @@ add_error() {
     
     local timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     
-    jq --arg message "$error_message" \
+    if jq --arg message "$error_message" \
        --arg context "$error_context" \
        --arg timestamp "$timestamp" \
        '
@@ -236,9 +253,14 @@ add_error() {
          "message": $message,
          "context": $context
        }]
-       ' "$log_file" > "${log_file}.tmp" && mv "${log_file}.tmp" "$log_file"
-    
-    echo -e "${RED}❌ Error logged: ${error_message}${NC}"
+       ' "$log_file" > "${log_file}.tmp"; then
+       mv "${log_file}.tmp" "$log_file"
+       echo -e "${RED}❌ Error logged: ${error_message}${NC}"
+    else
+       echo -e "${RED}❌ Failed to log error (jq error)${NC}"
+       rm -f "${log_file}.tmp"
+       return 1
+    fi
 }
 
 # Export functions for use in other scripts
