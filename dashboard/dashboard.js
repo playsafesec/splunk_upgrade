@@ -56,28 +56,29 @@ function initializeDashboard() {
 }
 
 // Load workflow logs directly from the logs folder
-// Matches the CSV loading pattern - files are in the same directory structure
+// Dynamically fetches logs-index.json to discover available log files
 async function loadWorkflowLogs() {
     showLoading(true);
 
     try {
         console.log('🔍 Loading workflow logs...');
 
-        // List of all log files - add new ones as they're created
-        // Just like the use cases in usecases.csv
-        const logFiles = [
-  'run_20251206_075948.json',
-  'run_20251206_075226.json',
-  'run_20251206_074435.json',
-  'run_20251206_073738.json',
-  'run_20251206_072805.json',
-  'run_20251206_071831.json',
-  'run_20251206_064702.json',
-            'run_20251204_155300_sample.json',
-            // New log files will be added here automatically by the workflow
-        ];
+        // Fetch the logs index file to get the list of available log files
+        let logFiles = [];
+        try {
+            const indexResponse = await fetch('logs/logs-index.json');
+            if (indexResponse.ok) {
+                const indexData = await indexResponse.json();
+                logFiles = indexData.files || [];
+                console.log(`📋 Found ${logFiles.length} log files in index`);
+            } else {
+                console.warn('⚠️ logs-index.json not found, falling back to empty list');
+            }
+        } catch (error) {
+            console.error('❌ Error fetching logs index:', error);
+        }
 
-        // Fetch all logs directly (same as fetching CSV data)
+        // Fetch all logs directly
         const logPromises = logFiles.map(async (filename) => {
             try {
                 const response = await fetch(`logs/${filename}`);

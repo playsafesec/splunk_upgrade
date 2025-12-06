@@ -512,22 +512,26 @@ jobs:
             echo "📝 Dashboard log: dashboard/logs/${{ needs.init_logging.outputs.run_id }}.json"
           fi
 
-      - name: Update Dashboard Log List
+      - name: Update Logs Index
         if: always()
         run: |
-          LOG_FILENAME="${{ needs.init_logging.outputs.run_id }}.json"
+          echo "📋 Generating logs-index.json..."
           
-          # Check if already in list
-          if ! grep -q "$LOG_FILENAME" dashboard/dashboard.js; then
-            # Add to top of list
-            sed -i.bak "/const logFiles = \[/a\\
-            '$LOG_FILENAME',
-            " dashboard/dashboard.js
-            rm dashboard/dashboard.js.bak
-            echo "✅ Added $LOG_FILENAME to dashboard"
-          else
-            echo "ℹ️  $LOG_FILENAME already in dashboard list"
-          fi
+          # Generate index of all log files
+          cd dashboard/logs
+          
+          # Create JSON array of all log files (sorted by date, newest first)
+          echo '{"files": [' > logs-index.json
+          ls -1t *.json 2>/dev/null | grep -v 'logs-index.json' | while read file; do
+            echo "  \"$file\"," >> logs-index.json
+          done
+          # Remove trailing comma and close the JSON
+          sed -i.bak '$ s/,$//' logs-index.json && rm -f logs-index.json.bak
+          echo '], "updated_at": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'" }' >> logs-index.json
+          
+          echo "✅ Generated logs-index.json with $(grep -c '"run_' logs-index.json || echo 0) log files"
+          cat logs-index.json
+          cd ../..
 
       - name: Commit and Push Logs
         env:
