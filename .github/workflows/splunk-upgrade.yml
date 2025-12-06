@@ -499,21 +499,20 @@ jobs:
           fi
 
       - name: Update Dashboard Log List
+        if: always()
         run: |
-          echo "📝 Updating dashboard log list..."
-          # Update the JavaScript file with new log filename
-          LOG_FILE="run_${{ needs.init_logging.outputs.run_id }}.json"
+          LOG_FILENAME="${{ needs.init_logging.outputs.run_id }}.json"
           
-          # Check if the file is already in the list
-          if ! grep -q "$LOG_FILE" dashboard/dashboard.js; then
-            # Add the new log file to the array in dashboard.js
+          # Check if already in list
+          if ! grep -q "$LOG_FILENAME" dashboard/dashboard.js; then
+            # Add to top of list
             sed -i.bak "/const logFiles = \[/a\\
-            '$LOG_FILE',
+            '$LOG_FILENAME',
             " dashboard/dashboard.js
             rm dashboard/dashboard.js.bak
-            echo "✅ Added $LOG_FILE to dashboard"
+            echo "✅ Added $LOG_FILENAME to dashboard"
           else
-            echo "ℹ️  $LOG_FILE already in dashboard list"
+            echo "ℹ️  $LOG_FILENAME already in dashboard list"
           fi
 
       - name: Commit and Push Logs
