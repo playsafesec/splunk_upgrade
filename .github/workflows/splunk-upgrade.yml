@@ -186,63 +186,37 @@ jobs:
         if: success()
         run: |
           source scripts/log_helper.sh
-
-          # Use double quotes so the GH Actions expression is expanded correctly
-          export SERVERS="${{ steps.parse.outputs.servers }}"
-          export URL="${{ steps.parse.outputs.package_url }}"
-          export VERSION="${{ steps.parse.outputs.package_version }}"
-          export TYPE="${{ steps.parse.outputs.package_type }}"
-          export PATH_VAL="${{ steps.parse.outputs.install_path }}"
-
-          echo "Debug: SERVERS raw:"
-          printf '%s\n' "$SERVERS"
-
-          # Try to pretty-print servers to check if it's valid JSON
-          if printf '%s' "$SERVERS" | jq empty >/dev/null 2>&1; then
-            echo "Debug: SERVERS is valid JSON."
-          else
-            echo "Debug: SERVERS is NOT valid JSON (maybe quoted/escaped). We'll let jq attempt to fromjson it."
-          fi
-
-          # Build outputs JSON robustly: try to fromjson the servers string, otherwise keep as-is
+          
+          # Create outputs JSON
+          # Create outputs JSON
+          # Use env vars to avoid shell escaping issues
+          export SERVERS='${{ steps.parse.outputs.servers }}'
+          export URL='${{ steps.parse.outputs.package_url }}'
+          export VERSION='${{ steps.parse.outputs.package_version }}'
+          export TYPE='${{ steps.parse.outputs.package_type }}'
+          export PATH_VAL='${{ steps.parse.outputs.install_path }}'
+          
+          echo "Debug: SERVERS=$SERVERS"
+          
           OUTPUTS_JSON=$(jq -n -c \
-            --arg servers "$SERVERS" \
+            --argjson servers "$SERVERS" \
             --arg url "$URL" \
             --arg version "$VERSION" \
             --arg type "$TYPE" \
             --arg path "$PATH_VAL" \
             '{
-              servers: ( ($servers | fromjson?) // ($servers | 
-                          try fromjson catch . // ($servers | fromjson? // .) ) ),
+              servers: $servers,
               package_url: $url,
               package_version: $version,
               package_type: $type,
               install_path: $path
             }')
-
-          # A simpler, clearer variant that tries fromjson then falls back to raw string (recommended)
-          # OUTPUTS_JSON=$(jq -n -c \
-          #   --arg servers "$SERVERS" \
-          #   --arg url "$URL" \
-          #   --arg version "$VERSION" \
-          #   --arg type "$TYPE" \
-          #   --arg path "$PATH_VAL" \
-          #   '{
-          #     servers: ($servers | fromjson? // $servers),
-          #     package_url: $url,
-          #     package_version: $version,
-          #     package_type: $type,
-          #     install_path: $path
-          #   }')
-
+            
           echo "Debug: OUTPUTS_JSON=$OUTPUTS_JSON"
-
-          # Pass JSON via env var to avoid shell argument issues for downstream helper
+          
+          # Pass JSON via env var to avoid shell argument issues
           export OUTPUT_JSON_ENV="$OUTPUTS_JSON"
-
-          # Call helper (unchanged)
           update_job_status "${{ needs.init_logging.outputs.run_id }}" "prepare" "success"
-
 
       - name: Update Job Status - Failed
         if: failure()
