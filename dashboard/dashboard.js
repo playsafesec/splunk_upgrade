@@ -66,6 +66,7 @@ async function loadWorkflowLogs() {
         // List of all log files - add new ones as they're created
         // Just like the use cases in usecases.csv
         const logFiles = [
+  'run_20251206_072805.json',
   'run_20251206_071831.json',
   'run_20251206_064702.json',
             'run_20251204_155300_sample.json',
