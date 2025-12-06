@@ -198,7 +198,7 @@ jobs:
           
           echo "Debug: SERVERS=$SERVERS"
           
-          OUTPUTS_JSON=$(jq -n \
+          OUTPUTS_JSON=$(jq -n -c \
             --argjson servers "$SERVERS" \
             --arg url "$URL" \
             --arg version "$VERSION" \
