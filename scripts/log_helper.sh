@@ -63,7 +63,8 @@ update_job_status() {
     local timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     
     # Use jq to update the log file
-    jq --arg job "$job_name" \
+    # Redirect to tmp file first, then move if successful
+    if jq --arg job "$job_name" \
        --arg status "$status" \
        --arg timestamp "$timestamp" \
        --argjson output "$output_json" \
@@ -75,9 +76,14 @@ update_job_status() {
          "outputs": $output,
          "logs": (if .jobs[$job].logs then .jobs[$job].logs else [] end)
        }
-       ' "$log_file" > "${log_file}.tmp" && mv "${log_file}.tmp" "$log_file"
-    
-    echo -e "${BLUE}📊 Updated job '${job_name}' status: ${status}${NC}"
+       ' "$log_file" > "${log_file}.tmp"; then
+       mv "${log_file}.tmp" "$log_file"
+       echo -e "${BLUE}📊 Updated job '${job_name}' status: ${status}${NC}"
+    else
+       echo -e "${RED}❌ Failed to update job status (jq error)${NC}"
+       rm -f "${log_file}.tmp"
+       return 1
+    fi
 }
 
 # Add a log entry to a specific job
